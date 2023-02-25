@@ -1,0 +1,40 @@
+---
+# tasks file for kubernetes-create-cluster
+
+- name: get cluster status
+  shell: kubectl cluster-info
+  register: cluster_info
+  failed_when: false
+  changed_when: false
+  become: yes
+  become_user: '{{ cluster_admin }}'
+
+- name: create new cluster
+  block:
+    - name: initialize cluster
+      shell: kubeadm init
+      register: console_output
+      failed_when: "'ERROR' in console_output.stderr"
+
+    # configure a user account on the master to have admin access to the API server
+    - name: create .kube dir
+      file:
+        path: /home/{{ cluster_admin }}/.kube
+        state: directory
+    - name: copy kubernetes admin config file
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/{{ cluster_admin }}/.kube/config
+        remote_src: yes
+        owner: '{{ cluster_admin }}'
+
+    - name: download the yaml file for the pod network
+      get_url:
+        url: https://docs.projectcalico.org/manifests/calico.yaml
+        dest: /tmp/calico.yml
+
+    - name: create pod network
+      shell: kubectl apply -f /tmp/calico.yml
+      become: yes
+      become_user: '{{ cluster_admin }}'
+  when: cluster_info.stderr != ""

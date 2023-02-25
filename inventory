@@ -1,0 +1,32 @@
+[all]
+docker-registry
+jenkins-master 
+gitlab 
+nexus 
+artifactory           
+jcr                   ansible_ssh_host=194.5.192.39
+kibana               
+elasticsearch        
+logstash             
+statsd               
+graphite             
+grafana              
+c1-master1            ansible_ssh_host=194.5.192.39
+c1-node1              ansible_ssh_host=194.5.207.28
+c1-node2              ansible_ssh_host=194.5.207.51
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+[elk]
+kibana
+elasticsearch
+logstash
+
+[k8s_cluster1]
+c1-master1
+c1-node1
+c1-node2
+
+[k8s_cluster1:vars]
+cluster_admin=ubuntu

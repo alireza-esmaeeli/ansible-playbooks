@@ -1,0 +1,60 @@
+---
+# tasks file for install-harbor
+
+- name: download the harbor installer
+  unarchive:
+    src: https://github.com/goharbor/harbor/releases/download/v1.10.1/harbor-offline-installer-v1.10.1.tgz
+    dest: /opt
+    remote_src: yes
+
+- name: copy certs folder
+  copy:
+    src: files/certs/
+    dest: /opt/certs/
+
+- name: install openssl
+  apt:
+    name:
+      - openssl
+    update_cache: yes
+    state: present
+
+- name: generate root private key
+  command:
+    chdir: /opt/certs
+    cmd: openssl genrsa -aes256 -passout file:passphrase.txt -out CA.key 2048
+    creates: CA.key
+
+- name: generate root CA
+  command:
+    chdir: /opt/certs
+    cmd: openssl req -new -x509 -key CA.key -passin file:passphrase.txt -subj "/CN=alireza" -sha256 -days 1460 -out CA.crt
+    creates: CA.crt
+
+- name: generate server private key
+  command:
+    chdir: /opt/certs
+    cmd: openssl genrsa -out server.key 2048
+    creates: server.key
+
+- name: generate server csr
+  command:
+    chdir: /opt/certs
+    cmd: openssl req -new -key server.key -subj "/CN=harbor.registry" -addext "subjectAltName = DNS:harbor.registry" -out server.csr
+    creates: server.csr
+
+- name: generate server certificate
+  command:
+    chdir: /opt/certs
+    cmd: openssl x509 -req -in server.csr -CA CA.crt -CAkey CA.key -passin file:passphrase.txt -CAcreateserial -out server.crt -days 365 -sha256
+    creates: server.crt
+
+- name: copy harbor configuration file
+  copy:
+    src: files/harbor.yml
+    dest: /opt/harbor/harbor.yml
+    
+- name: start harbor using install.sh script
+  command:
+    chdir: /opt/harbor
+    cmd: ./install.sh

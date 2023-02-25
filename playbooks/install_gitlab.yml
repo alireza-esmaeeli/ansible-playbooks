@@ -1,0 +1,13 @@
+---
+- hosts: gitlab
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: set-update-repo
+    - include_role:
+        name: install_docker
+    - include_role:
+        name: install_gitlab_docker

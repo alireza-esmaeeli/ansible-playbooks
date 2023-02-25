@@ -1,0 +1,38 @@
+---
+- hosts: elk
+  remote_user: root
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-docker-ubuntu
+    - include_role:
+        name: install-docker-compose
+
+- hosts: elasticsearch
+  remote_user: root
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-elasticsearch-docker
+
+- hosts: logstash
+  remote_user: root
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-logstash-docker
+        
+- hosts: kibana
+  remote_user: root
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-kibana-docker

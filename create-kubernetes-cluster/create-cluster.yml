@@ -1,0 +1,10 @@
+---
+- hosts: cluster
+  tasks:
+    - include_role:
+        name: kubernetes-install
+
+- hosts: masters
+  tasks:
+    - include_role:
+        name: kubernetes-create-cluster

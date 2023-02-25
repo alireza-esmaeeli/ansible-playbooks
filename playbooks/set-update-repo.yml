@@ -1,0 +1,9 @@
+---
+- hosts: all
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: set-update-repo

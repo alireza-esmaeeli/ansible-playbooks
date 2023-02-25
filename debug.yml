@@ -1,0 +1,54 @@
+- hosts: c1-node1
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+          #  - name: write token to a file 
+          #    shell: kubeadm token list -o yaml > token.yaml
+          #    changed_when: false
+          #
+          #  - name: fetch token file
+          #    fetch:
+          #      src: ./token.yaml
+          #      dest: .
+          #
+          #  - name: read variables
+          #    include_vars:
+          #      file: token.yaml
+          #      name: token
+          #
+          #  - name: print output
+          #    debug:
+          #      var: token
+          #      
+          #  - name: print output
+          #    debug:
+          #      msg: "token: {{token['token']}}"
+          #    - name: get cluster status
+          #      shell: kubectl cluster-info
+          #      register: cluster_info
+          #      failed_when: false
+          #      changed_when: false
+          #    - name: print cluster status
+          #      debug:
+          #        var: cluster_info
+          #  - name: test user switch
+          #    become: yes
+          #    become_user: "{{k8s_admin}}"
+          #    file:
+          #      path: /home/{{k8s_admin}}/.kube
+          #      state: directory
+          #  - name: check environment variables
+          #    debug:
+          #      msg: $HOME
+  - name: get cluster status
+    shell: kubectl cluster-info
+    register: cluster_info
+    failed_when: false
+    changed_when: false
+    become: yes
+    become_user: '{{ cluster_admin }}'
+  - name: output
+    debug:
+      var: cluster_info

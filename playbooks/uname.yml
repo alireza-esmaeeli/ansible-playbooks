@@ -1,0 +1,9 @@
+---
+- hosts: docker
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - debug:
+        msg: "lsb major release is: {{ansible_facts['machine']}}, {{ansible_facts['system']}}, {{ansible_facts['lsb']['codename']}}"

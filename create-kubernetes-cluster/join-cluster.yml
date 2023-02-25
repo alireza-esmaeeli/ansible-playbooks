@@ -1,0 +1,48 @@
+---
+- hosts: masters
+  tasks:
+    - name: install jq and openssl
+      apt:
+        name:
+          - jq
+          - openssl
+        state: present
+        update_cache: yes
+
+    - name: delete tokens
+      shell: kubeadm token delete $(kubeadm token list -o json | jq '.token' -r)
+      failed_when: false
+
+    - name: create new token
+      shell: kubeadm token create
+      register: create_result
+      failed_when: "'ERROR' in create_result.stderr"
+
+    - name: read token value
+      shell: kubeadm token list -o json | jq '.token' -r
+      register: token_value
+      changed_when: false
+
+    - name: read ca cert hash
+      shell:
+        cmd: >-
+                openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt |
+                openssl rsa -pubin -outform der 2>/dev/null |
+                openssl dgst -sha256 -hex | sed 's/^.* //' 
+      register: ca_cert_hash
+      changed_when: false
+      
+- hosts: nodes
+  tasks:
+    - include_role:
+        name: kubernetes-install
+
+    - name: join to the cluster
+      shell:
+        cmd: >-
+                kubeadm join {{ hostvars['master1']['ansible_ssh_host'] }}:6443
+                --token {{ hostvars['master1']['token_value'].stdout }}
+                --discovery-token-ca-cert-hash sha256:{{ hostvars['master1']['ca_cert_hash'].stdout }}
+        creates: /etc/kubernetes/kubelet.conf
+      register: join_result
+      failed_when: false # stderr is not defined, how can I catch errors?

@@ -1,0 +1,43 @@
+---
+#- hosts: jenkins-master,jcr
+#  remote_user: ubuntu
+#  become: yes
+#  become_method: sudo
+#  become_user: root
+#  tasks:
+#    - include_role:
+#        name: set-update-repo
+#    - include_role:
+#        name: install-docker-ubuntu
+#    - include_role:
+#        name: install-docker-compose
+
+- hosts: jcr
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-JCR-nginx-docker
+    - name: fetch generated root certificate
+      fetch:
+        src: compose/nginx/certs/CA.crt
+        dest: /home/alireza/Development/ansible/install-jenkins-docker/files/compose/dind/certs/
+        flat: yes
+
+#- hosts: jenkins-master
+#  remote_user: ubuntu
+#  become: yes
+#  become_method: sudo
+#  become_user: root
+#  tasks:
+#    - include_role:
+#        name: install-jenkins-docker
+
+- hosts: localhost
+  tasks:
+    - name: remove root CA
+      file:
+        path: /home/alireza/Development/ansible/install-jenkins-docker/files/compose/dind/certs/CA.crt
+        state: absent

@@ -1,0 +1,9 @@
+apiVersion: output.kubeadm.k8s.io/v1alpha1
+expires: "2020-03-16T20:15:52Z"
+groups:
+- system:bootstrappers:kubeadm:default-node-token
+kind: BootstrapToken
+token: 8unsql.en3pdve25rxmn9ol
+usages:
+- authentication
+- signing

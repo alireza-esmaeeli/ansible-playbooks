@@ -1,0 +1,15 @@
+---
+- hosts: jenkins-master
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: set-update-repo
+    - include_role:
+        name: install-docker-ubuntu
+    - include_role:
+        name: install-docker-compose
+    - include_role:
+        name: install-jenkins-docker

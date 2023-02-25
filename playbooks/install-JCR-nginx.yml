@@ -1,0 +1,13 @@
+---
+- hosts: jcr
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - include_role:
+        name: install-docker-ubuntu
+    - include_role:
+        name: install-docker-compose
+    - include_role:
+        name: install-JCR-nginx-docker

@@ -1,0 +1,96 @@
+---
+# tasks file for kubernetes-install
+
+- name: check swap
+  command: swapon --show
+  register: swapon_output
+  changed_when: false
+
+- name: disable swap
+  command: swapoff -a
+  when: swapon_output.stdout != ""
+  # this is based on the assumption that if swapon --show returns nothing, then the swap is already disabled on this system
+
+- name: install prerequisites
+  apt:
+    name:
+      - apt-transport-https
+      - curl
+    update_cache: yes
+    state: present
+
+- name: add Google’s official GPG key
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: add Kubernetes apt repository
+  apt_repository:
+    repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+
+- name: install docker kubelet kubeadm kubectl
+  apt:
+    name:
+      - docker.io=19.03.6-0ubuntu1~18.04.1
+      - kubelet=1.17.4-00
+      - kubeadm=1.17.4-00
+      - kubectl=1.17.4-00
+    update_cache: yes
+    state: present
+
+- name: prevent docker.io from getting upgraded automatically
+  dpkg_selections:
+    name: docker.io
+    selection: hold
+
+- name: prevent kubelet from getting upgraded automatically
+  dpkg_selections:
+    name: kubelet 
+    selection: hold
+
+- name: prevent kubeadm from getting upgraded automatically
+  dpkg_selections:
+    name: kubeadm
+    selection: hold
+
+- name: prevent kubectls from getting upgraded automatically
+  dpkg_selections:
+    name: kubectl
+    selection: hold
+
+- name: enable docker service
+  service:
+    name: docker
+    enabled: yes
+
+- name: enable kubelet service
+  service:
+    name: kubelet
+    enabled: yes
+
+- name: copy docker daemon config file
+  copy:
+    src: files/daemon.json
+    dest: /etc/docker/daemon.json
+
+- name: check if docker cgroup driver is set to systemd
+  shell: docker info | grep 'Cgroup Driver' | sed -n '/systemd/p' | sed -n 's/^.*$/systemd/p'
+  register: cgroup_driver
+  become_user: root
+  become: yes
+  changed_when: false
+
+- name: check if docker storage driver is set to overlay2
+  shell: docker info | grep 'Storage Driver' | sed -n '/overlay2/p' | sed -n 's/^.*$/overlay2/p'
+  register: storage_driver
+  become_user: root
+  become: yes
+  changed_when: false
+
+- name: restart docker service
+  systemd:
+    name: docker
+    daemon_reload: yes
+    state: restarted
+  when: cgroup_driver.stdout != "systemd" or storage_driver.stdout != "overlay2"

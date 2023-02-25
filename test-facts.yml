@@ -1,0 +1,9 @@
+---
+- hosts: logstash
+  remote_user: root
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - debug:
+        msg: "{{hostvars['kibana']['ansible_ssh_host']}}"
